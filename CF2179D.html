@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualizer | Sacred Permutation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #0b0f1a; color: #f8fafc; }
+        .mono { font-family: "JetBrains Mono", monospace; }
+        
+        /* Bit Coloring */
+        .bit-trailing { color: #ffcc33; font-weight: bold; text-decoration: underline; text-underline-offset: 4px; }
+        .bit-other { color: #67e8f9; }
+        .bit-dead { color: #475569; }
+        
+        /* Math Rendering via CSS */
+        .math-container { font-family: "Times New Roman", serif; font-style: italic; }
+        .sigma { font-family: serif; font-style: normal; font-size: 2rem; vertical-align: middle; position: relative; }
+        .sigma-sub { font-size: 0.7rem; position: absolute; bottom: -0.5rem; left: 0.2rem; }
+        .sigma-sup { font-size: 0.7rem; position: absolute; top: -0.6rem; left: 0.2rem; }
+        .math-box { background: rgba(30, 41, 59, 0.4); border: 1px solid #334155; padding: 1.5rem; border-radius: 0.75rem; }
+
+        /* Animation & Grid */
+        .row-transition { transition: transform var(--speed) cubic-bezier(0.2, 1, 0.2, 1), background 0.3s; }
+        
+        /* Unified Responsive Grid */
+        .grid-cfg { 
+            display: grid; 
+            grid-template-columns: 60px 140px 100px 140px 120px minmax(300px, 1fr); 
+            gap: 1rem; 
+            align-items: center; 
+            min-width: 950px; 
+        }
+
+        .active-glow { box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2); border-top: 1px solid #3b82f6; border-bottom: 1px solid #3b82f6; }
+        .nav-link { transition: all 0.2s; color: #94a3b8; }
+        .nav-link:hover { color: #60a5fa; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-[#161b2a] border-b border-slate-800 h-16 sticky top-0 z-[100] shadow-xl backdrop-blur-md">
+        <div class="max-w-7xl mx-auto h-full px-6 flex justify-between items-center text-xs font-bold uppercase tracking-widest">
+            <a href="index.html" class="text-blue-500 hover:text-blue-400 flex items-center gap-2 transition-colors" id="brand-logo">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+                LOADING...
+            </a>
+            <div class="flex gap-8" id="nav-links">
+                </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <section class="max-w-6xl mx-auto pt-10 px-6">
+            <div class="border-l-4 border-blue-600 pl-6 mb-8">
+                <h1 class="text-3xl font-black tracking-tight mb-1">D. Blackslex and Penguin Civilization</h1>
+                <p class="text-slate-400">Codeforces Round 1071 (Div. 3)</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-10 mb-10">
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Problem Statement</h2>
+                        <p class="text-sm text-slate-300 mb-6 leading-relaxed">
+                            Find a permutation <i>p</i> of the array [0, 1, ..., 2<sup>n</sup> - 1] that maximizes the <b>Sacred Sum</b> <i>S(p)</i>:
+                        </p>
+                        
+                        <div class="math-box flex justify-center items-center gap-2 shadow-xl">
+                            <span class="text-2xl math-container">S(p) = </span>
+                            <span class="sigma">
+                                &Sigma;
+                                <span class="sigma-sup">2<sup>n</sup>-1</span>
+                                <span class="sigma-sub">i=0</span>
+                            </span>
+                            <span class="text-xl math-container ml-4">
+                                popcount(p<sub>0</sub> & p<sub>1</sub> & ... & p<sub>i</sub>)
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm text-slate-300 space-y-4 pt-4 border-t border-slate-800">
+                        <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest">The Strategy</h2>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>The <b>Prefix AND</b> is non-increasing. A bit flipped to 0 is lost forever.</li>
+                            <li>To maximize <i>S(p)</i>, we prioritize numbers with the most <b>Trailing 1s</b> (\(\text{ctz}(\sim a)\)).</li>
+                            <li>If Trailing 1s are equal, we pick the <b>Minimum Value</b> for lexicographical minimal result.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Optimal Comparator (C++)</h2>
+<pre class="bg-slate-950 p-4 rounded-lg border border-slate-800 mono text-[11px] leading-relaxed shadow-lg">
+<span class="text-blue-400">sort</span>(ans.begin(), ans.end(), [](int a, int b) {
+    <span class="text-slate-500">// __builtin_ctz(~x) counts trailing 1-bits</span>
+    int cntA = __builtin_ctz(~a); 
+    int cntB = __builtin_ctz(~b);
+    
+    <span class="text-pink-400">if</span>(cntA != cntB) 
+        <span class="text-pink-400">return</span> cntA > cntB; <span class="text-slate-500">// Most Trailing 1s first</span>
+        
+    <span class="text-pink-400">return</span> a < b; <span class="text-slate-500">// Lexicographical Minimal tie-break</span>
+});</pre>
+                </div>
+            </div>
+        </section>
+
+        <header class="sticky top-16 z-50 bg-[#1e293b]/95 backdrop-blur-md border-y border-slate-700 p-4 shadow-2xl">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4 px-6">
+                <div class="flex gap-4 items-end">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] uppercase font-black text-slate-500 mb-1">N (1-8)</label>
+                        <input type="number" id="inpN" value="4" min="1" max="8" class="bg-slate-950 border border-slate-600 rounded px-3 py-1.5 w-16 text-sm outline-none text-white focus:border-blue-500">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] uppercase font-black text-slate-500 mb-1">Speed (ms)</label>
+                        <input type="number" id="inpSpeed" value="300" step="50" class="bg-slate-950 border border-slate-600 rounded px-3 py-1.5 w-20 text-sm outline-none text-white focus:border-blue-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btn" onclick="initAndRun()" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black py-2.5 px-6 rounded shadow-lg transition-all active:scale-95">START</button>
+                        <button id="stopBtn" onclick="stopVisualization()" class="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black py-2.5 px-6 rounded transition-all opacity-50 cursor-not-allowed" disabled>STOP</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-8">
+                    <div class="flex gap-5">
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                            <span class="w-3 h-3 bg-[#ffcc33] rounded-sm shadow-[0_0_5px_#ffcc33]"></span> Trailing 1s
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                            <span class="w-3 h-3 bg-[#67e8f9] rounded-sm shadow-[0_0_5px_#67e8f9]"></span> Other 1s
+                        </div>
+                    </div>
+                    <div id="status" class="text-xs font-bold text-blue-400 uppercase tracking-widest border-l border-slate-700 pl-8">Idle</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="w-[98%] max-w-7xl mt-8 mx-auto bg-[#161b2a] rounded-xl border border-slate-700 shadow-2xl overflow-x-auto mb-20">
+            <div class="grid-cfg px-8 py-3 bg-slate-800/50 border-b border-slate-700 text-[10px] text-slate-500 font-bold mono">
+                <span></span><div id="ruler1" class="flex justify-start"></div>
+                <span></span><div id="ruler2" class="flex justify-start"></div>
+                <span></span><span></span>
+            </div>
+            <div class="grid-cfg px-8 py-4 border-b border-slate-700 text-[11px] uppercase font-black text-slate-200 tracking-widest mono">
+                <span class="text-center">Dec</span>
+                <span>Binary</span>
+                <span class="text-center">Trailing</span>
+                <span>Prefix AND</span>
+                <span class="text-center text-blue-400">Sacred Sum</span>
+                <span>Decision Logic</span>
+            </div>
+            <div id="view" class="relative w-full mono"></div>
+        </main>
+    </main>
+
+    <footer class="bg-[#161b2a] border-t border-slate-800 py-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex flex-col items-center md:items-start">
+                <h4 class="text-sm font-black text-white mb-1 uppercase tracking-tighter" id="footer-brand">LOADING...</h4>
+                <p class="text-xs text-slate-500" id="footer-credit">Built by Dev</p>
+            </div>
+            <div class="flex gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400" id="footer-links">
+                </div>
+            <p class="text-[10px] text-slate-600 font-mono">2025 • Saifullah Solves</p>
+        </div>
+    </footer>
+
+    <script>
+        let items = [];
+        let isRunning = false;
+        let animationTimeout;
+        const ROW_H = 42;
+
+        const getT1 = n => { if (n === 0) return 0; let c = 0, t = n; while (t > 0 && (t & 1)) { c++; t >>= 1; } return c; };
+        const getPop = n => (n.toString(2).match(/1/g) || []).length;
+
+        function formatBits(n, bits, trailingCount) {
+            let binStr = n.toString(2).padStart(bits, '0');
+            let res = "";
+            let tStart = bits - trailingCount;
+            for(let i = 0; i < bits; i++) {
+                if (binStr[i] === '1') {
+                    const cls = i >= tStart ? "bit-trailing" : "bit-other";
+                    res += `<span class="${cls}">1</span>`;
+                } else {
+                    res += `<span class="bit-dead">0</span>`;
+                }
+            }
+            return res;
+        }
+
+        function buildRuler(n) {
+            let html = "";
+            for(let i = n-1; i >= 0; i--) html += `<span style="width:9.6px; display:inline-block; text-align:center">${i}</span>`;
+            document.getElementById('ruler1').innerHTML = html;
+            document.getElementById('ruler2').innerHTML = html;
+        }
+
+        function stopVisualization() {
+            isRunning = false;
+            clearTimeout(animationTimeout);
+            document.getElementById('btn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('stopBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('status').innerText = "Stopped";
+        }
+
+        function initAndRun() {
+            const n = parseInt(document.getElementById('inpN').value);
+            const speed = parseInt(document.getElementById('inpSpeed').value);
+            document.documentElement.style.setProperty('--speed', speed + 'ms');
+            
+            isRunning = true;
+            document.getElementById('btn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('stopBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('status').innerText = "Running...";
+            
+            buildRuler(n);
+            const view = document.getElementById('view');
+            const limit = 1 << n;
+            view.innerHTML = '';
+            view.style.height = (limit * ROW_H) + 'px';
+            items = [];
+
+            for (let i = 0; i < limit; i++) {
+                const tOnes = getT1(i);
+                const el = document.createElement('div');
+                el.className = "row-transition absolute w-full grid-cfg px-8 bg-[#161b2a] border-b border-slate-800/40 text-[13px] h-[42px]";
+                el.style.transform = `translateY(${i * ROW_H}px)`;
+                el.innerHTML = `
+                    <span class="text-slate-500 font-bold text-center">${i}</span>
+                    <span class="mono">${formatBits(i, n, tOnes)}</span>
+                    <span class="text-center font-bold text-slate-400">${tOnes}</span>
+                    <span class="prefix-bin opacity-30 mono">-</span>
+                    <span class="sum-val text-center text-green-400 font-bold">-</span>
+                    <span class="logic text-[10px] text-blue-300 truncate font-medium italic">Idle</span>
+                `;
+                view.appendChild(el);
+                items.push({ v: i, tOnes: tOnes, pop: getPop(i), el: el });
+            }
+            processStep(0, limit, speed, n, (1 << n) - 1, 0);
+        }
+
+        async function processStep(step, limit, speed, n, currentAnd, currentSum) {
+            if (!isRunning) return;
+            if (step >= limit) { 
+                stopVisualization();
+                document.getElementById('status').innerText = "Complete";
+                return; 
+            }
+
+            let bestIdx = step;
+            let tie = false;
+            for (let j = step + 1; j < limit; j++) {
+                if (items[j].tOnes > items[bestIdx].tOnes) { bestIdx = j; tie = false; }
+                else if (items[j].tOnes === items[bestIdx].tOnes) {
+                    if (items[j].v < items[bestIdx].v) bestIdx = j;
+                    tie = true;
+                }
+            }
+
+            const target = items[bestIdx];
+            target.el.classList.add('bg-slate-800', 'active-glow', 'z-10');
+            let log = `Rank ${step}: <b>Max Trailing 1s</b> (${target.tOnes})`;
+            if (tie) log += ` | <b>Lex. Min Tie-break</b> (${target.v})`;
+            target.el.querySelector('.logic').innerHTML = log;
+
+            await new Promise(r => animationTimeout = setTimeout(r, speed));
+            if (!isRunning) return;
+
+            items.splice(bestIdx, 1);
+            items.splice(step, 0, target);
+            const newAnd = currentAnd & target.v;
+            const newSum = currentSum + getPop(newAnd);
+            const prefT1 = getT1(newAnd);
+
+            items.forEach((item, idx) => {
+                item.el.style.transform = `translateY(${idx * ROW_H}px)`;
+                if (idx === step) {
+                    item.el.classList.remove('bg-slate-800', 'active-glow', 'z-10');
+                    item.el.classList.add('border-l-4', 'border-l-blue-500', 'bg-blue-900/10');
+                    item.el.querySelector('.prefix-bin').innerHTML = formatBits(newAnd, n, prefT1);
+                    item.el.querySelector('.prefix-bin').classList.replace('opacity-30', 'opacity-100');
+                    item.el.querySelector('.sum-val').innerText = newSum;
+                }
+            });
+            animationTimeout = setTimeout(() => processStep(step + 1, limit, speed, n, newAnd, newSum), speed);
+        }
+
+        // Fetch common data from JSON
+        async function loadCommonData() {
+            try {
+                const response = await fetch('tutorials.json');
+                const data = await response.json();
+                const p = data.profile;
+                const b = data.branding;
+                const t = data.tutorials.find(x => x.html_path.includes("CF2179D"));
+
+                // Update Branding & Navbar
+                document.getElementById('brand-logo').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg> ${b.first_part} <span class="text-white">${b.second_part}</span>`;
+                
+                if (t) {
+                    document.getElementById('nav-links').innerHTML = `
+                        <a href="${t.problem_url}" target="_blank" class="text-slate-400 hover:text-blue-400 flex items-center gap-2 transition-colors">
+                            Problem <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                        <a href="${t.submission_url}" target="_blank" class="text-slate-400 hover:text-blue-400 flex items-center gap-2 transition-colors">
+                            Submission <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                    `;
+                }
+
+                // Update Footer
+                document.getElementById('footer-brand').innerHTML = `${b.first_part} <span class="text-blue-500">${b.second_part}</span>`;
+                document.getElementById('footer-credit').innerText = `Built by ${p.name}`;
+                document.getElementById('footer-links').innerHTML = `
+                    <a href="${p.github}" target="_blank" class="nav-link">GitHub</a>
+                    <a href="${p.linkedin}" target="_blank" class="nav-link">LinkedIn</a>
+                    <a href="${p.repo}" target="_blank" class="nav-link text-blue-500">Repository</a>
+                `;
+            } catch (e) { 
+                console.error("Error loading common data from tutorials.json:", e); 
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadCommonData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "name": "SAYFULLAH MONSUR SUJAN SARKAR",
+    "short_bio": "Competitive Programmer & Software Enthusiast. Passionate about bitwise optimizations, complexity analysis, and creating interactive tools to simplify complex algorithms.",
+    "linkedin": "https://linkedin.com/in/saifullahmnsur",
+    "github": "https://github.com/saifullahmnsur-again",
+    "repo": "https://github.com/saifullahmnsur-again/saifullah-solves"
+  },
+  "branding": {
+    "first_part": "SAIFULLAH",
+    "second_part": "SOLVES",
+    "full_name": "Saifullah Solves"
+  },
+  "tutorials": [
+    {
+      "id": "2179D",
+      "platform": "Codeforces",
+      "name": "Blackslex and Penguin Civilization",
+      "tag": "Bitwise Sort",
+      "problem_url": "https://codeforces.com/contest/2179/problem/D",
+      "submission_url": "https://codeforces.com/contest/2179/submission/354801408",
+      "html_path": "CF2179D.html",
+      "description": "Maximizing prefix AND popcount sums using trailing bit analysis and lexicographical tie-breaking."
+    }
+  ]
+}

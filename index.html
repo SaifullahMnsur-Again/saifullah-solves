@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saifullah Solves | Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f1a; color: #f8fafc; }
+        .nav-link { transition: all 0.2s; color: #94a3b8; }
+        .nav-link:hover { color: #60a5fa; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-[#161b2a] border-b border-slate-800 h-16 sticky top-0 z-[100] shadow-xl backdrop-blur-md">
+        <div class="max-w-7xl mx-auto h-full px-6 flex justify-between items-center">
+            <h1 class="text-xl font-black tracking-tighter text-blue-500 uppercase" id="brand-logo">
+                LOADING...
+            </h1>
+            <div class="flex gap-8 items-center text-[10px] font-black uppercase tracking-widest" id="nav-socials"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto pt-12 px-6 flex-grow">
+        <header class="mb-12 border-l-4 border-blue-600 pl-6 py-1">
+            <div class="flex flex-col gap-1 mb-4">
+                <span class="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">Developer Profile</span>
+                <h2 class="text-3xl font-black tracking-tight text-white" id="user-name">Loading...</h2>
+            </div>
+            <p class="text-slate-400 text-base leading-relaxed max-w-2xl mb-6" id="user-bio">Fetching bio...</p>
+            <div id="header-socials"></div>
+        </header>
+
+        <div class="flex items-center gap-4 mb-8">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">Algorithm Tutorials</h3>
+            <div class="h-[1px] bg-slate-800 flex-grow"></div>
+        </div>
+
+        <div id="tutorial-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"></div>
+    </main>
+
+    <footer class="bg-[#161b2a] border-t border-slate-800 py-10 mt-auto">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex flex-col items-center md:items-start">
+                <h4 class="text-sm font-black text-white mb-1 uppercase tracking-tighter" id="footer-brand">BRANDING</h4>
+                <p class="text-xs text-slate-500" id="footer-credit">Built by Saifullah</p>
+            </div>
+            <div class="flex gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400" id="footer-links"></div>
+            <p class="text-[10px] text-slate-600 font-mono" id="footer-year">2025</p>
+        </div>
+    </footer>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('tutorials.json');
+                const data = await response.json();
+                const p = data.profile;
+                const b = data.branding;
+                
+                // Set Dynamic Branding
+                document.getElementById('brand-logo').innerHTML = `${b.first_part}<span class="text-white">${b.second_part}</span>`;
+                document.getElementById('footer-brand').innerHTML = `${b.first_part} <span class="text-blue-500">${b.second_part}</span>`;
+                document.title = `${b.full_name} | Hub`;
+
+                // Set Profile
+                document.getElementById('user-name').innerText = p.name;
+                document.getElementById('user-bio').innerText = p.short_bio;
+                document.getElementById('footer-credit').innerText = `Built by ${p.name}`;
+                
+                const socialHtml = `<a href="${p.github}" target="_blank" class="nav-link">GitHub</a><a href="${p.linkedin}" target="_blank" class="nav-link">LinkedIn</a>`;
+                document.getElementById('nav-socials').innerHTML = socialHtml;
+                document.getElementById('footer-links').innerHTML = socialHtml + `<a href="${p.repo}" target="_blank" class="nav-link text-blue-500">Repository</a>`;
+
+                document.getElementById('header-socials').innerHTML = `<a href="${p.repo}" target="_blank" class="inline-flex bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-bold gap-2 transition-all shadow-lg active:scale-95"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.011-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12"/></svg>Project Repo</a>`;
+
+                const grid = document.getElementById('tutorial-grid');
+                grid.innerHTML = ''; 
+                data.tutorials.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-[#161b2a] border border-slate-800 rounded-2xl p-6 hover:border-blue-500 transition-all flex flex-col shadow-2xl group";
+                    card.innerHTML = `<div class="flex justify-between items-center mb-4 text-[9px] font-black uppercase"><span class="text-blue-500 tracking-wider">${item.platform} • ${item.id}</span><span class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">${item.tag}</span></div><h3 class="text-lg font-bold mb-2 group-hover:text-blue-400 transition-colors">${item.name}</h3><p class="text-slate-400 text-xs mb-6 leading-relaxed flex-grow">${item.description}</p><div class="space-y-4"><a href="${item.html_path}" class="block w-full bg-blue-600 hover:bg-blue-500 text-white text-center py-2 rounded-lg font-bold text-xs transition-all active:scale-95">Open Tutorial</a><div class="flex justify-between border-t border-slate-800 pt-3 text-[9px] font-black text-slate-500"><a href="${item.problem_url}" target="_blank" class="hover:text-white">PROBLEM</a><a href="${item.submission_url}" target="_blank" class="hover:text-white">SUBMISSION</a></div></div>`;
+                    grid.appendChild(card);
+                });
+            } catch (e) { console.error(e); }
+        }
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
